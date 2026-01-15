@@ -26,11 +26,48 @@ def main():
     #    - Add User message to Conversation
     #    - Call DialClient with conversation history
     #    - Add Assistant message to Conversation and print its content
-    raise NotImplementedError()
+
+    deployment_name = "gpt-4o"
+    # deployment_name="gemini-2.5-pro"
+    # deployment_name="claude-3-7-sonnet"
+
+    user_client = UserClient()
+
+    client = DialClient(
+        endpoint=DIAL_ENDPOINT,
+        deployment_name=deployment_name,
+        api_key=API_KEY,
+        tools=[
+            WebSearchTool(api_key=API_KEY, endpoint=DIAL_ENDPOINT),
+            GetUserByIdTool(user_client),
+            SearchUsersTool(user_client),
+            CreateUserTool(user_client),
+            UpdateUserTool(user_client),
+            DeleteUserTool(user_client),
+        ]
+    )
+
+    conversation = Conversation()
+    conversation.add_message(Message(Role.SYSTEM, SYSTEM_PROMPT))
+
+    print("Type your question or 'exit' to quit.")
+    print("Sample:")
+    print("Add Andrej Karpathy as a new user")
+
+    while True:
+        user_input = input("> ").strip()
+
+        if user_input.lower() == "exit":
+            print("Exiting the chat. Goodbye!")
+            break
+
+        conversation.add_message(Message(Role.USER, user_input))
+
+        ai_message = client.get_completion(conversation.get_messages(), print_request=True)
+        conversation.add_message(ai_message)
+        print("🤖:", ai_message.content)
+        print("=" * 100)
+        print()
 
 
 main()
-
-#TODO:
-# Request sample:
-# Add Andrej Karpathy as a new user
